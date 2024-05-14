@@ -15,11 +15,6 @@ class PaymentScreen extends StatelessWidget {
         .add(FetchOrderDetailsEvent(orderId: orderId));
     return Scaffold(
       appBar: AppBar(
-        leading: InkWell(
-            onTap: () {
-              Navigator.pop(context);
-            },
-            child: const Icon(Icons.arrow_back)),
         title: const Text('Order Details'),
       ),
       body: BlocBuilder<OrderHistoryBloc, OrderHistoryState>(

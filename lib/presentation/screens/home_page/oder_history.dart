@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../data/data_sources/sqlite.dart';
 import '../../blocs/order_history_bloc/order_history_bloc.dart';
 import 'order_details.dart';
 
 class OrderHistoryScreen extends StatelessWidget {
-  const OrderHistoryScreen({super.key});
+  OrderHistoryScreen({super.key});
 
+  OrderHistoryBloc orderHistoryBloc =
+      OrderHistoryBloc(dataBaseHelper: DataBaseHelper())
+        ..add(OrderHistoryFetchingEvent());
+        
   @override
   Widget build(BuildContext context) {
-    final orderHistoryBloc = BlocProvider.of<OrderHistoryBloc>(context);
-    orderHistoryBloc.add(OrderHistoryFetchingEvent());
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Order History'),
@@ -69,7 +71,7 @@ class OrderHistoryScreen extends StatelessWidget {
             );
           } else {
             return const Center(
-              child: Text("jy"),
+              child: CircularProgressIndicator(),
             );
           }
         },

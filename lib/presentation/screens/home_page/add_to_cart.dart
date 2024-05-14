@@ -227,7 +227,7 @@ class AddToCartScreen extends StatelessWidget {
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) =>
-                                        const OrderHistoryScreen()))
+                                         OrderHistoryScreen()))
                             .then((value) => BlocProvider.of<AddToCartBloc>(context).add(AddToCartInitialEvent()));
                       }
                       context.read<AddToCartBloc>().add(PlaceOrderEvent());
