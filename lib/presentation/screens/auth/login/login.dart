@@ -1,6 +1,5 @@
 part of 'login_imports.dart';
 
-@RoutePage()
 class Login extends StatefulWidget {
   const Login({super.key});
 
@@ -23,7 +22,10 @@ class _LoginState extends State<Login> {
         body: BlocConsumer<SignInBloc, SignInState>(
           listener: (context, state) {
             if (state is SignInSuccess) {
-              AutoRouter.of(context).replace(HomePageRoute());
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const HomePage(userId: 1)));
             } else if (state is SignInFailure) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(state.message ?? "Login failed")),
@@ -106,30 +108,34 @@ class _LoginState extends State<Login> {
                               40.h.heightBox,
                               Row(
                                 children: [
-                                  Checkbox(value: _rememberMe, onChanged: (bool? value){
-                                setState(() {
-                                  _rememberMe = value!;
-                                });
-                              }),
-                                const Text('Remember me', style: TextStyle(color: Colors.black),),
+                                  Checkbox(
+                                      value: _rememberMe,
+                                      onChanged: (bool? value) {
+                                        setState(() {
+                                          _rememberMe = value!;
+                                        });
+                                      }),
+                                  const Text(
+                                    'Remember me',
+                                    style: TextStyle(color: Colors.black),
+                                  ),
                                 ],
                               ),
-
                               CommonButton(
                                   title: "Login",
                                   onPressed: () {
                                     if (_formKey.currentState!.validate()) {
-                                      context.read<SignInBloc>().add(
-                                          SignInRequiredEvent(
-                                              userName: userNameController.text,
-                                              password: passwordController.text,
-                                              rememberMe: _rememberMe,
+                                      context
+                                          .read<SignInBloc>()
+                                          .add(SignInRequiredEvent(
+                                            userName: userNameController.text,
+                                            password: passwordController.text,
+                                            rememberMe: _rememberMe,
                                           ));
                                     }
                                     _usernamefocusNode.unfocus();
                                     _passwordfocusNode.unfocus();
-                                  }
-                                  ),
+                                  }),
                               20.h.heightBox,
                               "Don’t have an account?"
                                   .richText
@@ -138,13 +144,20 @@ class _LoginState extends State<Login> {
                                   .color(MyColors.primaryColor)
                                   .withTextSpanChildren([
                                 TextSpan(
-                                    recognizer: TapGestureRecognizer()
-                                      ..onTap = () => AutoRouter.of(context)
-                                          .push(const RegisterRoute()),
-                                    text: " Sign Up",
-                                    style: TextStyle(
-                                        color: MyColors.primaryColor,
-                                        fontWeight: FontWeight.w700))
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () => Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const Register(),
+                                          ),
+                                        ),
+                                  text: " Sign Up",
+                                  style: TextStyle(
+                                    color: MyColors.primaryColor,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                               ]).makeCentered()
                             ],
                           ),

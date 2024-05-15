@@ -6,12 +6,13 @@ import '../../blocs/order_history_bloc/order_history_bloc.dart';
 import 'order_details.dart';
 
 class OrderHistoryScreen extends StatelessWidget {
-  OrderHistoryScreen({super.key});
+  final int userId;
+  OrderHistoryScreen({super.key, required this.userId});
 
   OrderHistoryBloc orderHistoryBloc =
-      OrderHistoryBloc(dataBaseHelper: DataBaseHelper())
+      OrderHistoryBloc(dataBaseHelper: DataBaseHelper(), userId: 1)
         ..add(OrderHistoryFetchingEvent());
-        
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

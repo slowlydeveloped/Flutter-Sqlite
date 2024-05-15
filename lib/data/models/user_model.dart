@@ -12,6 +12,7 @@ class Users {
       );
 
   Map<String, dynamic> toMap() => {
+        "userId": userId,
         "userName": userName,
         "password": password,
       };

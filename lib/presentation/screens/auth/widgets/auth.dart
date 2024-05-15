@@ -1,6 +1,5 @@
 part of 'auth_imports.dart';
 
-@RoutePage()
 class Auth extends StatefulWidget {
   const Auth({super.key});
 
@@ -45,7 +44,8 @@ class _AuthState extends State<Auth> {
                 25.h.heightBox,
                 ElevatedButton(
                   onPressed: () {
-                    AutoRouter.of(context).push(const LoginRoute());
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => const Login()));
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: MyColors.primaryColor,
@@ -69,7 +69,10 @@ class _AuthState extends State<Auth> {
                 12.h.heightBox,
                 ElevatedButton(
                   onPressed: () {
-                    AutoRouter.of(context).push(const RegisterRoute());
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const Register()));
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,

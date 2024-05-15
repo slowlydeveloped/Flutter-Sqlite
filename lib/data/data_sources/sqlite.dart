@@ -1,5 +1,5 @@
-import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
 
 import '../../presentation/blocs/add_to_cart/add_to_cart_bloc.dart';
 import '../models/cart_model.dart';
@@ -7,26 +7,14 @@ import '../models/user_model.dart';
 
 class DataBaseHelper {
   final databaseName = "shopper.db";
-  String cart =
-      "create table cart (id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE, product TEXT NOT NULL, description TEXT NOT NULL, amount REAL)";
-
-  String addCart =
-      "create table addCart(id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE, itemId INTEGER, product TEXT NOT NULL, description TEXT NOT NULL, amount REAL, quantity INTEGER, isSelected INTEGER )";
-
   String users =
-      "create table users (userId INTEGER PRIMARY KEY AUTOINCREMENT, userName TEXT UNIQUE, password TEXT)";
-
-  String orderHistory = "CREATE TABLE orderHistory ("
-      "orderId TEXT,"
-      "productId INTEGER,"
-      "productName TEXT NOT NULL,"
-      "productDescription TEXT NOT NULL,"
-      "quantity INTEGER,"
-      "amount REAL,"
-      "tax REAL,"
-      "totalAmount REAL,"
-      "finalAmount REAL"
-      ")";
+      "create table users (userId INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE, userName TEXT UNIQUE, password TEXT)";
+  String cart =
+      "create table cart (id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE, userId INTEGER , product TEXT NOT NULL, description TEXT NOT NULL, amount REAL, FOREIGN KEY (userId) REFERENCES users(userId))";
+  String addCart =
+      "create table addCart(id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE, userId INTEGER , itemId INTEGER, product TEXT NOT NULL, description TEXT NOT NULL, amount REAL, quantity INTEGER, isSelected INTEGER, FOREIGN KEY (userId) REFERENCES users(userId))";
+  String orderHistory =
+      "CREATE TABLE orderHistory (orderId TEXT, userId INTEGER , productId INTEGER, productName TEXT NOT NULL, productDescription TEXT NOT NULL, quantity INTEGER, amount REAL, tax REAL, totalAmount REAL, finalAmount REAL, FOREIGN KEY (userId) REFERENCES users(userId))";
 
   // Create and initialize the database
   Future<Database> initDB() async {
@@ -47,118 +35,118 @@ class DataBaseHelper {
     });
   }
 
-  // this function is used for logging in the user with credentials
+  // User login
   Future<bool> login(Users user) async {
     final Database db = await initDB();
-
-    var result = await db.rawQuery(
-        "select * from users where userName = '${user.userName}' AND password = '${user.password}'");
-    if (result.isNotEmpty) {
-      return true;
-    } else {
-      return false;
-    }
+    List<Map<String, Object?>> result = await db.rawQuery(
+        "SELECT * FROM users WHERE userName = ? AND password = ?",
+        [user.userName, user.password]);
+    return result.isNotEmpty;
   }
 
-  // this function is used to add the user to the db
+  // User signup
   Future<int> signup(Users user) async {
     final Database db = await initDB();
-
     return db.insert('users', user.toMap());
   }
 
-  // This function is used to search products in the db
-  Future<List<CartModel>> searchCartItem(String keywords) async {
+  // Search products in the cart
+  Future<List<CartModel>> searchCartItem(String keywords, int userId) async {
     final Database db = await initDB();
     List<Map<String, dynamic>> searchResults = await db.query(
       'cart',
-      where: "product LIKE ?",
-      whereArgs: ['%$keywords%'],
+      where: "product LIKE ? AND userId = ?",
+      whereArgs: ['%$keywords%', userId],
     );
-    // print("searchResults: $searchResults");
-    List<CartModel> items =
-        searchResults.map((item) => CartModel.fromMap(item)).toList();
-    return items;
+    return searchResults.map((item) => CartModel.fromMap(item)).toList();
   }
 
-  // this function is used to add the new products to the db
-  Future<int> createCartItem(CartModel addToCart) async {
+  // Get cart items for a user
+  Future<List<CartModel>> getCartItem(int userId) async {
     final Database db = await initDB();
-    return db.insert('cart', addToCart.toMap());
-  }
-
-  // this function is used to fetch the products from the db
-  Future<List<CartModel>> getCartItem() async {
-    final Database db = await initDB();
-    List<Map<String, Object?>> result = await db.query('cart');
+    List<Map<String, Object?>> result = await db.query(
+      'cart',
+      where: 'userId = ?',
+      whereArgs: [userId],
+    );
     return result.map((e) => CartModel.fromMap(e)).toList();
   }
 
-  // this function is used to delete the items from the db using id
+  // Add a new item to the cart
+  Future<int> createCartItem(CartModel cartItem, int userId) async {
+    final Database db = await initDB();
+    cartItem.userId = userId;
+    print('Inserting cart item with userId: ${cartItem.userId}');
+    return db.insert('cart', cartItem.toMap());
+  }
+
+  // Delete a cart item
   Future<int> deleteCartItem(int id) async {
     final Database db = await initDB();
     return db.delete('cart', where: 'id = ?', whereArgs: [id]);
   }
 
-  // this function is used to update the info about the product in the db
-  Future<int> updateCartItem(
-      int id, String product, String description, double amount) async {
+  // Update a cart item
+  Future<int> updateCartItem(int id, String product, String description,
+      double amount, int userId) async {
     final Database db = await initDB();
-    return db.update("cart",
-        {"product": product, "description": description, "amount": amount},
-        where: "id = ?", whereArgs: [id]);
+    return db.update(
+      "cart",
+      {"product": product, "description": description, "amount": amount},
+      where: "id = ? AND userId = ?",
+      whereArgs: [id, userId],
+    );
   }
 
-  // this function is used to add the products in the addcart table from cart table
-  Future<int> addToCart(CartItemModel cartItem) async {
+  // Add an item to addCart table
+  Future<int> addToCart(CartItemModel cartItem, int userId) async {
     final Database db = await initDB();
+    cartItem.userId =userId; 
     return db.insert('addCart', cartItem.toMap());
   }
 
-  // this function is used to fetch all the products that are stored in the add cart table
-  Future<List<CartItemModel>> getAddToCartItems(
+  // Get addCart items for a user
+  Future<List<CartItemModel>> getAddToCartItems(int userId,
       {bool fetchItems = true}) async {
     final Database db = await initDB();
     List<Map<String, Object?>> result;
     if (fetchItems) {
-      result = await db.query('addCart');
-    } else {
       result =
-          await db.query('addCart', where: 'isSelected = ?', whereArgs: [1]);
+          await db.query('addCart', where: 'userId = ?', whereArgs: [userId]);
+    } else {
+      result = await db.query('addCart',
+          where: 'userId = ? AND isSelected = ?', whereArgs: [userId, 1]);
     }
     return result.map((e) => CartItemModel.fromMap(e)).toList();
   }
 
-  // this function is used to delete a particular item from the adccart table using id.
+  // Remove an item from addCart table
   Future<int> removeFromCart(int id) async {
     final Database db = await initDB();
     return db.delete('addCart', where: 'id=?', whereArgs: [id]);
   }
 
-  // this function is used to clear all the products from the addcart table
-  Future<int> clearCart() async {
+  // Clear all items from addCart table
+  Future<int> clearCart(int userId) async {
     final Database db = await initDB();
-    // print("All items Cleared.");
-    return db.delete('addCart');
+    return db.delete('addCart', where: 'userId = ?', whereArgs: [userId]);
   }
 
-  // this function is used to check if the product is in the addcart table with the help of the itemid.
-  Future<bool> isProductInCart(int itemId) async {
+  // Check if product is in addCart table
+  Future<bool> isProductInCart(int itemId, int userId) async {
     final Database db = await initDB();
     final List<Map<String, dynamic>> result = await db.query(
       'addCart',
       columns: ['itemId'],
-      where: 'itemId = ?',
-      whereArgs: [itemId],
+      where: 'itemId = ? AND userId = ?',
+      whereArgs: [itemId, userId],
     );
     return result.isNotEmpty;
   }
 
-  /// This function is used to save order history by taking orderID and list of item of datatype
-  /// cartitemmodel and saves the data, in first await it is storing items and in second
-  ///  await it is storing amount.
+  // Save order history
   Future<int> saveOrderHistory(
-      String orderId, List<CartItemModel> items) async {
+      String orderId, List<CartItemModel> items, int userId) async {
     final Database db = await initDB();
     double orderTotalAmount = 0.0;
     double orderFinalAmount = 0.0;
@@ -169,9 +157,11 @@ class DataBaseHelper {
       final totalAmount = (amount + tax) * item.quantity;
 
       orderTotalAmount += totalAmount;
+      // print('Saving order history for userId: $userId');
 
       await db.insert('orderHistory', {
         'orderId': orderId,
+        'userId': userId,
         'productId': item.id,
         'productName': item.product,
         'productDescription': item.description,
@@ -187,35 +177,39 @@ class DataBaseHelper {
         'INSERT INTO orderHistory (orderId, totalAmount, finalAmount) VALUES (?, ?, ?)',
         [orderId, orderTotalAmount, orderFinalAmount]);
   }
-  
-Future<double> _calculateOrderFinalAmount(Database db, String orderId) async {
-  final List<Map<String, dynamic>> results = await db.rawQuery(
-    'SELECT SUM(totalAmount) AS finalAmount FROM orderHistory WHERE orderId = ?',
-    [orderId],
-  );
-  double orderFinalAmount = results.first['finalAmount'] ?? 0.0;
-  return orderFinalAmount;
-}
 
-  Future<List<Map<String, dynamic>>> fetchOrderHistory() async {
+  // Calculate final amount for an order
+  Future<double> calculateOrderFinalAmount(Database db, String orderId) async {
+    final List<Map<String, dynamic>> results = await db.rawQuery(
+      'SELECT SUM(totalAmount) AS finalAmount FROM orderHistory WHERE orderId = ?',
+      [orderId],
+    );
+    double orderFinalAmount = results.first['finalAmount'] ?? 0.0;
+    return orderFinalAmount;
+  }
+
+  // Fetch order history for a user
+  Future<List<Map<String, dynamic>>> fetchOrderHistory({int? userId}) async {
     final Database db = await initDB();
-    List<Map<String, dynamic>> results =
-        await db.query('orderHistory', columns: ['orderId', 'totalAmount']);
+    List<Map<String, dynamic>> results = await db
+        .query('orderHistory', where: 'userId = ?', whereArgs: [userId]);
     return results;
   }
 
-Future<List<Map<String, dynamic>>> fetchOrderDetails(String orderId) async {
-  final Database db = await initDB();
-  List<Map<String, dynamic>> results = await db.query(
-    'orderHistory',
-    where: 'orderId = ?',
-    whereArgs: [orderId],
-  );
-  return results;
-}
+  // Fetch details of a specific order
+  Future<List<Map<String, dynamic>>> fetchOrderDetails(String orderId,
+      {int? userId}) async {
+    final Database db = await initDB();
+    List<Map<String, dynamic>> results = await db.query(
+      'orderHistory',
+      where: 'orderId = ? AND userId = ?',
+      whereArgs: [orderId, userId],
+    );
+    return results;
+  }
 
-  // this function is used to calculate the discount for the item
-  double _calculateDiscountedAmount(double amount, OfferState offerState) {
+  // Calculate discounted amount
+  double calculateDiscountedAmount(double amount, OfferState offerState) {
     if (offerState is SBIState) {
       return amount * (1 - offerState.discountPercentage);
     } else if (offerState is AxisState) {

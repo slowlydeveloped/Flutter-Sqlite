@@ -1,6 +1,6 @@
-import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../data/data_sources/sqlite.dart';
 import '/presentation/screens/home_page/add_to_cart.dart';
 import '/presentation/screens/home_page/oder_history.dart';
@@ -9,22 +9,32 @@ import '../../../data/models/cart_model.dart';
 import '../../blocs/cart_bloc/cart_bloc.dart';
 import '../../blocs/logged_out/logged_out_bloc.dart';
 
-@RoutePage()
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final int userId;
+  const HomePage({super.key, required this.userId});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  late final CartBloc cartBloc;
+  late CartBloc cartBloc;
   late final DataBaseHelper dataBaseHelper;
+
+  int userId = 2;
+
   @override
   void initState() {
     dataBaseHelper = DataBaseHelper();
-    cartBloc = context.read<CartBloc>()..add(FetchCartItemEvent());
+    cartBloc = context.read<CartBloc>()
+      ..add(FetchCartItemEvent(userId: userId));
     super.initState();
+  }
+
+  getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+     final result = await prefs.getInt('userId');
+     return result;
   }
 
   final searchController = TextEditingController();
@@ -39,15 +49,17 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("DivineMart"),
+        title: Text(getUserId().toString()),
         actions: [
           const SizedBox(width: 10),
           GestureDetector(
             onTap: () {
               Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>  OrderHistoryScreen()));
+                context,
+                MaterialPageRoute(
+                  builder: (context) => OrderHistoryScreen(userId: userId),
+                ),
+              );
             },
             child: const Icon(
               Icons.history,
@@ -58,9 +70,11 @@ class _HomePageState extends State<HomePage> {
           GestureDetector(
             onTap: () {
               Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const AddToCartScreen()));
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AddToCartScreen(userId: userId),
+                ),
+              );
             },
             child: const Icon(
               Icons.shopping_cart,
@@ -161,7 +175,8 @@ class _HomePageState extends State<HomePage> {
               GestureDetector(
                 onTap: () {
                   if (item.id != null) {
-                    cartBloc.add(CartItemDeleteEvent(item.id!));
+                    print(" hhhhh ${item.userId}");
+                    cartBloc.add(CartItemDeleteEvent(item.id!, item.userId!));
                   }
                 },
                 child: const Icon(Icons.delete),
@@ -177,6 +192,7 @@ class _HomePageState extends State<HomePage> {
               GestureDetector(
                 onTap: () {
                   final cartItem = CartItemModel(
+                    userId: item.userId!,
                     id: item.id ?? 0,
                     product: item.product,
                     description: item.description,
@@ -184,8 +200,8 @@ class _HomePageState extends State<HomePage> {
                     quantity: 1,
                     isSelected: true,
                   );
-                  CartBloc(dataBaseHelper: dataBaseHelper)
-                      .add(CartItemAddedOnClickedEvent(clickedItem: cartItem));
+                  cartBloc.add(CartItemAddedOnClickedEvent(
+                      clickedItem: cartItem, userId: userId));
                 },
                 child: const Icon(Icons.shopping_cart),
               ),
@@ -199,9 +215,9 @@ class _HomePageState extends State<HomePage> {
 
   void _filterItems(BuildContext context, String query) {
     if (query.isEmpty) {
-      cartBloc.add(FetchCartItemEvent());
+      cartBloc.add(FetchCartItemEvent(userId: userId));
     } else {
-      cartBloc.add(CartItemSearchEvent(query));
+      cartBloc.add(CartItemSearchEvent(query, userId));
     }
   }
 
@@ -235,7 +251,7 @@ class _HomePageState extends State<HomePage> {
               productController.clear();
               descriptionController.clear();
               amountController.clear();
-              cartBloc.add(AddCartItemEvent(items: newItem));
+              cartBloc.add(AddCartItemEvent(items: newItem, userId: userId));
               Navigator.pop(context);
             },
             child: const Text("Add"),
@@ -293,8 +309,9 @@ class _HomePageState extends State<HomePage> {
                   description: descriptionController.text,
                   amount: double.tryParse(amountController.text) ?? 0.0,
                 );
-                BlocProvider.of<CartBloc>(context).add(
+                cartBloc.add(
                   CartItemUpdateEvent(
+                    userId: item.userId!,
                     id: item.id!,
                     product: updatedItem.product,
                     description: updatedItem.description,

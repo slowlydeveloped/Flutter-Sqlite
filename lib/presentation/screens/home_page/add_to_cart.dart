@@ -5,8 +5,9 @@ import '../../../data/models/cart_model.dart';
 import '../../blocs/add_to_cart/add_to_cart_bloc.dart';
 
 class AddToCartScreen extends StatelessWidget {
-  const AddToCartScreen({super.key});
+  const AddToCartScreen({super.key, required this.userId});
 
+  final int userId;
   double _calculateTotalPrice(
       List<CartItemModel> cartItems, OfferState? offerState) {
     double totalPrice = 0.0;
@@ -227,7 +228,7 @@ class AddToCartScreen extends StatelessWidget {
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) =>
-                                         OrderHistoryScreen()))
+                                         OrderHistoryScreen(userId: userId)))
                             .then((value) => BlocProvider.of<AddToCartBloc>(context).add(AddToCartInitialEvent()));
                       }
                       context.read<AddToCartBloc>().add(PlaceOrderEvent());
