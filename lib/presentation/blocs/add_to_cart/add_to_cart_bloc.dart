@@ -49,5 +49,86 @@ class AddToCartBloc extends Bloc<AddToCartEvent, AddToCartState> {
     });
 
     // Other event handlers remain unchanged but should also pass `userId` where necessary.
+    // CheckedItemsInCartEvent: Event triggered when items in the cart are checked.
+    on<CheckedItemsInCartEvent>((event, emit) {
+      event.checkedItems[event.index!].isSelected =
+          !event.checkedItems[event.index!].isSelected;
+      emit(AddToCartItemAddedSuccessState(cartItems: event.checkedItems));
+    });
+
+    // OnAddButtonEvent: Event triggered when the add button is clicked.
+    on<OnAddButtonEvent>((event, emit) {
+      event.quantity = event.quantity! + 1;
+      event.cartList[event.index!].quantity = event.quantity!;
+      double newTotalPrice = event.cartList
+          .fold(0.0, (total, item) => total + (item.quantity * item.amount));
+      event.cartList.first.totalPrice = newTotalPrice;
+      emit(AddToCartItemAddedSuccessState(cartItems: event.cartList));
+    });
+
+    // OnMinusButtonEvent: Event triggered when the minus button is clicked.
+    on<OnMinusButtonEvent>((event, emit) {
+      if (event.quantity! > 1) {
+        event.quantity = event.quantity! - 1;
+        event.cartList[event.index!].quantity = event.quantity!;
+        double newTotalPrice = event.cartList
+            .fold(0.0, (total, item) => total + (item.quantity * item.amount));
+        event.cartList.first.totalPrice = newTotalPrice;
+        emit(AddToCartItemAddedSuccessState(cartItems: event.cartList));
+      }
+    });
+
+    // SelectSBIEvent: Event triggered when SBI is selected.
+    on<SelectSBIEvent>((event, emit) {
+      final currentState = state;
+      if (currentState is AddToCartItemAddedSuccessState) {
+        emit(AddToCartItemAddedSuccessState(
+          cartItems: currentState.cartItems,
+          offerState: SBIState(),
+        ));
+      }
+    });
+
+    // SelectAxisEvent: Event triggered when Axis is selected.
+    on<SelectAxisEvent>((event, emit) {
+      final currentState = state;
+      if (currentState is AddToCartItemAddedSuccessState) {
+        emit(AddToCartItemAddedSuccessState(
+          cartItems: currentState.cartItems,
+          offerState: AxisState(),
+        ));
+      }
+    });
+
+    // SelectFirstTransactionEvent: Event triggered when FirstTransaction is selected.
+    on<SelectFirstTransactionEvent>((event, emit) {
+      final currentState = state;
+      if (currentState is AddToCartItemAddedSuccessState) {
+        emit(AddToCartItemAddedSuccessState(
+          cartItems: currentState.cartItems,
+          offerState: FirstTransactionState(),
+        ));
+      }
+    });
+
+    // PlaceOrderEvent: Event triggered to place an order.
+    on<PlaceOrderEvent>((event, emit) async {
+      if (state is AddToCartItemAddedSuccessState) {
+        try {
+          final selectedItems = (state as AddToCartItemAddedSuccessState)
+              .cartItems
+              .where((item) => item.isSelected)
+              .toList();
+
+          final orderId = UniqueKey().toString();
+          await _dataBaseHelper.saveOrderHistory(
+              orderId, selectedItems, userId);
+
+          emit(OrderPlacedState(orderId));
+        } catch (e) {
+          emit(AddToCartErrorState("Failed to place order."));
+        }
+      }
+    });
   }
 }

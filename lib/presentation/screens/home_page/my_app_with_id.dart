@@ -5,7 +5,6 @@ import '../../../core/constants/my_strings.dart';
 import '../../../data/data_sources/sqlite.dart';
 import '../../blocs/add_to_cart/add_to_cart_bloc.dart';
 import '../../blocs/cart_bloc/cart_bloc.dart';
-import '../../blocs/logged_out/logged_out_bloc.dart';
 import '../../blocs/order_history_bloc/order_history_bloc.dart';
 import '../../blocs/sign_in_bloc/sign_in_bloc.dart';
 import '../../blocs/sign_up_bloc/sign_up_bloc.dart';
@@ -15,7 +14,7 @@ class MyAppWithUserId extends StatelessWidget {
   final DataBaseHelper dataBaseHelper;
   final int userId;
 
-  MyAppWithUserId({required this.dataBaseHelper, required this.userId});
+  const MyAppWithUserId({super.key, required this.dataBaseHelper, required this.userId});
 
   @override
   Widget build(BuildContext context) {
@@ -28,11 +27,8 @@ class MyAppWithUserId extends StatelessWidget {
         ),
         BlocProvider<SignUpBloc>(
           create: (_) => SignUpBloc(
-            dataBaseHelper,
+            dataBaseHelper
           ),
-        ),
-        BlocProvider<LoggedOutBloc>(
-          create: (context) => LoggedOutBloc(),
         ),
         BlocProvider<CartBloc>(
           create: (context) => CartBloc(
@@ -51,10 +47,10 @@ class MyAppWithUserId extends StatelessWidget {
           ),
         ),
       ],
-      child: const MaterialApp(
+      child: MaterialApp(
         title: MyStrings.appName,
         debugShowCheckedModeBanner: false,
-        home: HomePage(userName: ''), 
+        home: HomePage(userId: userId), 
       ),
     );
   }

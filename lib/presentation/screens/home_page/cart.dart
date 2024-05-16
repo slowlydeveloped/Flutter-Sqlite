@@ -7,11 +7,10 @@ import '/presentation/screens/home_page/oder_history.dart';
 import '../../../core/constants/my_colors.dart';
 import '../../../data/models/cart_model.dart';
 import '../../blocs/cart_bloc/cart_bloc.dart';
-import '../../blocs/logged_out/logged_out_bloc.dart';
 
 class HomePage extends StatefulWidget {
-  final String userName;
-  const HomePage({super.key, required this.userName});
+  final int userId;
+  const HomePage({super.key, required this.userId});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -20,7 +19,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late CartBloc cartBloc;
   late final DataBaseHelper dataBaseHelper;
-  late int userId;
+  // late int userId;
 
   @override
   void initState() {
@@ -31,9 +30,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _initUser() async {
-    userId = await dataBaseHelper.getUserId(widget.userName) ?? 1;
+    // userId = await dataBaseHelper.getUserId(widget.userId) ?? 1;
     setState(() {
-      cartBloc.add(FetchCartItemEvent(userId: userId));
+      cartBloc.add(FetchCartItemEvent(userId: widget.userId));
     });
   }
 
@@ -46,7 +45,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.userName),
+        title: Text(widget.userId.toString()),
         actions: [
           const SizedBox(width: 10),
           GestureDetector(
@@ -54,7 +53,7 @@ class _HomePageState extends State<HomePage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => OrderHistoryScreen(userId: userId),
+                  builder: (context) => OrderHistoryScreen(userId: widget.userId),
                 ),
               );
             },
@@ -69,7 +68,7 @@ class _HomePageState extends State<HomePage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => AddToCartScreen(userId: userId),
+                  builder: (context) => AddToCartScreen(userId: widget.userId),
                 ),
               );
             },
@@ -82,7 +81,7 @@ class _HomePageState extends State<HomePage> {
           GestureDetector(
             onTap: () {
               Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => Login()));
+                  context, MaterialPageRoute(builder: (context) => const Login()));
             },
             child: const Icon(
               Icons.logout,
@@ -198,7 +197,7 @@ class _HomePageState extends State<HomePage> {
                     isSelected: true,
                   );
                   cartBloc.add(CartItemAddedOnClickedEvent(
-                      clickedItem: cartItem, userId: userId));
+                      clickedItem: cartItem, userId: widget.userId));
                 },
                 child: const Icon(Icons.shopping_cart),
               ),
@@ -212,9 +211,9 @@ class _HomePageState extends State<HomePage> {
 
   void _filterItems(BuildContext context, String query) {
     if (query.isEmpty) {
-      cartBloc.add(FetchCartItemEvent(userId: userId));
+      cartBloc.add(FetchCartItemEvent(userId: widget.userId));
     } else {
-      cartBloc.add(CartItemSearchEvent(query, userId));
+      cartBloc.add(CartItemSearchEvent(query, widget.userId));
     }
   }
 
@@ -248,7 +247,7 @@ class _HomePageState extends State<HomePage> {
               productController.clear();
               descriptionController.clear();
               amountController.clear();
-              cartBloc.add(AddCartItemEvent(items: newItem, userId: userId));
+              cartBloc.add(AddCartItemEvent(items: newItem, userId: widget.userId));
               Navigator.pop(context);
             },
             child: const Text("Add"),

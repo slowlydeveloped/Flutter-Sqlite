@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:sql_crud/presentation/screens/auth/login/login_imports.dart';
+import '/presentation/screens/auth/login/login_imports.dart';
 import '../data/data_sources/sqlite.dart';
 import '../core/constants/my_strings.dart';
 import 'presentation/blocs/sign_in_bloc/sign_in_bloc.dart';
@@ -15,7 +15,7 @@ void main() async {
 class MyApp extends StatelessWidget {
   final DataBaseHelper dataBaseHelper;
 
-  MyApp({super.key, required this.dataBaseHelper});
+  const MyApp({super.key, required this.dataBaseHelper});
 
   @override
   Widget build(BuildContext context) {
