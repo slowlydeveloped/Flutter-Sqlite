@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../data/data_sources/sqlite.dart';
+import '../auth/login/login_imports.dart';
 import '/presentation/screens/home_page/add_to_cart.dart';
 import '/presentation/screens/home_page/oder_history.dart';
 import '../../../core/constants/my_colors.dart';
@@ -10,8 +10,8 @@ import '../../blocs/cart_bloc/cart_bloc.dart';
 import '../../blocs/logged_out/logged_out_bloc.dart';
 
 class HomePage extends StatefulWidget {
-  final int userId;
-  const HomePage({super.key, required this.userId});
+  final String userName;
+  const HomePage({super.key, required this.userName});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -20,36 +20,33 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late CartBloc cartBloc;
   late final DataBaseHelper dataBaseHelper;
-
-  int userId = 2;
+  late int userId;
 
   @override
   void initState() {
     dataBaseHelper = DataBaseHelper();
-    cartBloc = context.read<CartBloc>()
-      ..add(FetchCartItemEvent(userId: userId));
+    cartBloc = context.read<CartBloc>();
+    _initUser();
     super.initState();
   }
 
-  getUserId() async {
-    final prefs = await SharedPreferences.getInstance();
-     final result = await prefs.getInt('userId');
-     return result;
+  void _initUser() async {
+    userId = await dataBaseHelper.getUserId(widget.userName) ?? 1;
+    setState(() {
+      cartBloc.add(FetchCartItemEvent(userId: userId));
+    });
   }
 
   final searchController = TextEditingController();
-
   final productController = TextEditingController();
-
   final descriptionController = TextEditingController();
-
   final amountController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(getUserId().toString()),
+        title: Text(widget.userName),
         actions: [
           const SizedBox(width: 10),
           GestureDetector(
@@ -84,7 +81,8 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(width: 10),
           GestureDetector(
             onTap: () {
-              context.read<LoggedOutBloc>().add(UserRequestedLogout(context));
+              Navigator.push(
+                  context, MaterialPageRoute(builder: (context) => Login()));
             },
             child: const Icon(
               Icons.logout,
@@ -175,7 +173,6 @@ class _HomePageState extends State<HomePage> {
               GestureDetector(
                 onTap: () {
                   if (item.id != null) {
-                    print(" hhhhh ${item.userId}");
                     cartBloc.add(CartItemDeleteEvent(item.id!, item.userId!));
                   }
                 },
@@ -285,18 +282,15 @@ class _HomePageState extends State<HomePage> {
             children: [
               TextField(
                 controller: productController,
-                decoration: const InputDecoration(hintText: "Product"),
-                maxLines: null,
+                decoration: const InputDecoration(hintText: 'Product'),
               ),
               TextField(
                 controller: descriptionController,
-                decoration: const InputDecoration(hintText: "Description"),
-                maxLines: null,
+                decoration: const InputDecoration(hintText: 'Description'),
               ),
               TextField(
                 controller: amountController,
-                decoration: const InputDecoration(hintText: "Amount"),
-                maxLines: null,
+                decoration: const InputDecoration(hintText: 'Amount'),
               ),
             ],
           ),
@@ -320,13 +314,13 @@ class _HomePageState extends State<HomePage> {
                 );
                 Navigator.pop(context);
               },
-              child: const Text("Save"),
+              child: const Text('Save'),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: const Text("Cancel"),
+              child: const Text('Cancel'),
             ),
           ],
         );

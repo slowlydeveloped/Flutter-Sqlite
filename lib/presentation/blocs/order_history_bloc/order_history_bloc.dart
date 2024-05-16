@@ -19,8 +19,7 @@ class OrderHistoryBloc extends Bloc<OrderHistoryEvent, OrderHistoryState> {
       emit(OrderHistoryLoading());
       try {
         // Fetch order history data specific to the logged-in user
-        final orders = await _dataBaseHelper.fetchOrderHistory(
-            userId: userId);
+        final orders = await _dataBaseHelper.fetchOrderHistory(userId);
         emit(FetchOrderHistoryState(orderHistoryList: orders));
       } catch (e) {
         emit(const OrderHistoryLoadingError("Error fetching order history"));
@@ -31,8 +30,7 @@ class OrderHistoryBloc extends Bloc<OrderHistoryEvent, OrderHistoryState> {
       emit(OrderHistoryLoading());
       try {
         // Fetch details of a specific order belonging to the logged-in user
-        final orders = await _dataBaseHelper.fetchOrderDetails(event.orderId,
-            userId: userId);
+        final orders = await _dataBaseHelper.fetchOrderDetails(event.orderId, userId);
         emit(OrderDetailsFetchingState(orderDetailsList: orders));
       } catch (e) {
         emit(const OrderHistoryLoadingError("Error fetching order history"));

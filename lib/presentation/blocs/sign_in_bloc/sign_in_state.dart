@@ -5,13 +5,16 @@ sealed class SignInState {}
 
 final class SignInInitial extends SignInState {}
 
-class SignInSuccess extends SignInState {}
+class SignInSuccess extends SignInState {
+  final int userId;
 
-class SignInFailure extends SignInState{
+  SignInSuccess({required this.userId});
+}
+
+class SignInFailure extends SignInState {
   final String? message;
 
   SignInFailure(this.message);
-
 }
 
-class SignInProgress extends SignInState{}
+class SignInProgress extends SignInState {}

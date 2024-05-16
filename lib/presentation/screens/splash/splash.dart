@@ -18,11 +18,11 @@ class _SplashState extends State<Splash> {
     await Future.delayed(const Duration(seconds: 3));
     final prefs = await SharedPreferences.getInstance();
     final isLoggedIn = prefs.getBool('isLogged') ?? false;
-    final userId = prefs.getInt('userId');
+    // final userName = prefs.getString('userName');
     if (isLoggedIn) {
       // If logged in, navigate to the Home screen
       Navigator.push(context,
-          MaterialPageRoute(builder: (context) => HomePage(userId: userId!)));
+          MaterialPageRoute(builder: (context) => HomePage(userName: 'lenovo@gmail.com')));
     } else {
       // If not logged in, navigate to the OnBoarding screen
       Navigator.push(

@@ -25,7 +25,10 @@ class _LoginState extends State<Login> {
               Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => const HomePage(userId: 1)));
+                      builder: (context) => MyAppWithUserId(
+                          dataBaseHelper:
+                              context.read<SignInBloc>().dataBaseHelper,
+                          userId: state.userId)));
             } else if (state is SignInFailure) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(state.message ?? "Login failed")),

@@ -35,6 +35,20 @@ class DataBaseHelper {
     });
   }
 
+   Future<int?> getUserId(String userName) async {
+    final Database db = await initDB();
+    List<Map<String, Object?>> result = await db.query(
+      'users',
+      columns: ['userId'],
+      where: 'userName = ?',
+      whereArgs: [userName],
+    );
+    if (result.isNotEmpty) {
+      return result.first['userId'] as int?;
+    }
+    return null;
+  }
+
   // User login
   Future<bool> login(Users user) async {
     final Database db = await initDB();
@@ -76,7 +90,7 @@ class DataBaseHelper {
   Future<int> createCartItem(CartModel cartItem, int userId) async {
     final Database db = await initDB();
     cartItem.userId = userId;
-    print('Inserting cart item with userId: ${cartItem.userId}');
+    // print('Inserting cart item with userId: ${cartItem.userId}');
     return db.insert('cart', cartItem.toMap());
   }
 
@@ -189,7 +203,7 @@ class DataBaseHelper {
   }
 
   // Fetch order history for a user
-  Future<List<Map<String, dynamic>>> fetchOrderHistory({int? userId}) async {
+  Future<List<Map<String, dynamic>>> fetchOrderHistory(int userId) async {
     final Database db = await initDB();
     List<Map<String, dynamic>> results = await db
         .query('orderHistory', where: 'userId = ?', whereArgs: [userId]);
@@ -198,7 +212,7 @@ class DataBaseHelper {
 
   // Fetch details of a specific order
   Future<List<Map<String, dynamic>>> fetchOrderDetails(String orderId,
-      {int? userId}) async {
+      int userId) async {
     final Database db = await initDB();
     List<Map<String, dynamic>> results = await db.query(
       'orderHistory',

@@ -1,38 +1,31 @@
-import 'package:bloc/bloc.dart';
-import 'package:meta/meta.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../../data/models/user_model.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../data/data_sources/sqlite.dart';
-
 part 'sign_in_event.dart';
 part 'sign_in_state.dart';
 
 class SignInBloc extends Bloc<SignInEvent, SignInState> {
-  final DataBaseHelper _dataBaseHelper;
-   final int userId;
-  SignInBloc({required DataBaseHelper dataBaseHelper, required this.userId})
-      : _dataBaseHelper = dataBaseHelper,
-        super(SignInInitial()) {
+  final DataBaseHelper dataBaseHelper;
 
-    on<SignInRequiredEvent>((event, emit) async {
-      emit(SignInProgress());
-      try {
-        final isSignInSuccessFull = await _dataBaseHelper
-            .login(Users(userName: event.userName, password: event.password, userId:userId ));
-        if (isSignInSuccessFull ) {
-          if(event.rememberMe){
-            final prefs = await SharedPreferences.getInstance();
-              await prefs.setBool('isLogged', true);
-          }
-          emit(SignInSuccess());
-        }
-        else {
-          emit(SignInFailure("Invalid User Credential!!!"));
-        }
-      } catch (error) {
-        emit(SignInFailure("Invalid User Credential!!!"));
+  SignInBloc({required this.dataBaseHelper}) : super(SignInInitial()) {
+    on<SignInRequiredEvent>(_onSignInButtonPressed);
+  }
+
+  void _onSignInButtonPressed(
+    SignInRequiredEvent event,
+    Emitter<SignInState> emit,
+  ) async {
+    emit(SignInProgress());
+
+    try {
+      final userId = await dataBaseHelper.getUserId(event.userName);
+      if (userId != null) {
+        emit(SignInSuccess(userId: userId));
+      } else {
+        emit(SignInFailure('User not found'));
       }
-    });
+    } catch (error) {
+      emit(SignInFailure(error.toString()));
+    }
   }
 }
-
